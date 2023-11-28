@@ -1,7 +1,7 @@
 package pool
 
 type Task struct {
-	Id      int
+	ID      int
 	Created string // время создания
 	Handled string // время выполнения
 	Result  []byte

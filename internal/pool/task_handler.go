@@ -20,6 +20,7 @@ func NewTaskHandler(ch chan Task, res *Result, handlers uint8) *TaskHandler {
 	return &TaskHandler{ch: ch, result: res, handlers: handlers}
 }
 
+// Create - create jobs.
 func (th *TaskHandler) Create(ctx context.Context) {
 	for {
 		select {
@@ -29,11 +30,10 @@ func (th *TaskHandler) Create(ctx context.Context) {
 		default:
 			created := time.Now().Format(time.RFC3339)
 			if time.Now().Nanosecond()%2 > 0 { // вот такое условие появления ошибочных тасков
-				created = "Some error occured"
+				created = "Some error occurred"
 			}
-			th.ch <- Task{Created: created, Id: int(time.Now().Unix())} // передаем таск на выполнение
+			th.ch <- Task{Created: created, ID: int(time.Now().Unix())} // передаем таск на выполнение
 		}
-
 	}
 }
 
@@ -51,16 +51,18 @@ func (th *TaskHandler) handle(ctx context.Context, job Handler) {
 	}
 }
 
+// RunHandlers - run handlers for tasks.
 func (th *TaskHandler) RunHandlers(ctx context.Context, job Handler) {
 	for i := uint8(0); i < th.handlers; i++ {
 		go th.handle(ctx, job)
 	}
 }
 
-func (th *TaskHandler) sortResult(t *Task) {
-	if string(t.Result[14:]) == "successed" {
-		th.result.AddDone(t)
+func (th *TaskHandler) sortResult(task *Task) {
+	if string(task.Result[14:]) == "successed" {
+		th.result.AddDone(task)
 		return
 	}
-	th.result.AddError(fmt.Errorf("Task id %d time %s, error %s", t.Id, t.Created, t.Result))
+
+	th.result.AddError(fmt.Errorf("Task id %d time %s, error %s", task.ID, task.Created, task.Result))
 }

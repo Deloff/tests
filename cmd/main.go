@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
-	handlers "github.com/Deloff/test/internal/handlers"
-	"github.com/Deloff/test/internal/pool"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Deloff/test/internal/handlers"
+	"github.com/Deloff/test/internal/pool"
 )
 
 // ЗАДАНИЕ:
@@ -24,17 +26,22 @@ import (
 func handleShutdown() context.Context {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	go func() {
-		chSystem := make(chan os.Signal)
+		chSystem := make(chan os.Signal, 1)
 		signal.Notify(chSystem, os.Interrupt, syscall.SIGTERM)
 		<-chSystem
 		cancel()
-
 	}()
 
 	return ctx
 }
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Info("panic!", slog.Any("recover", r))
+		}
+	}()
+
 	ctx := handleShutdown()
 
 	poolSize := uint8(10)
@@ -47,17 +54,6 @@ func main() {
 
 	<-ctx.Done()
 
-	println("Errors:")
-	for _, r := range result.Errors() {
-		if r == nil {
-			continue
-		}
-		println(r.Error())
-	}
-
-	println("Done tasks:")
-	for r := range result.Done() {
-		println(r)
-	}
-
+	result.PrintErrors()
+	result.PrintDone()
 }

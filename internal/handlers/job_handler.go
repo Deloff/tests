@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"github.com/Deloff/test/internal/pool"
 	"time"
+
+	"github.com/Deloff/test/internal/pool"
 )
 
 type JobHandler struct{}
